@@ -1,8 +1,13 @@
 // index.ts
 import SvgaPlayer from './SvgaPlayer';
-
 import React from 'react';
-import {ViewProps} from 'react-native';
+import {
+    requireNativeComponent,
+    NativeModules,
+    Platform,
+    ViewProps
+} from 'react-native';
+import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource'
 
 interface SVGAPlayerProps extends ViewProps {
   onFinished?: () => void;
@@ -15,7 +20,7 @@ interface SVGAPlayerState {
   currentState: string;
   toPercentage: number;
 }
-export default class RNSvgaPlayer extends React.Component<
+export class RNSvgaPlayer extends React.Component<
   SVGAPlayerProps,
   SVGAPlayerState
 > {
@@ -82,4 +87,28 @@ export default class RNSvgaPlayer extends React.Component<
 
     return <SvgaPlayer ref={this.childRef} {...this.props} {...this.state} />;
   }
+}
+
+
+const _Module = NativeModules.SvgaMoudle || NativeModules.RNSVGAManager
+export class RNSVGAModule {
+
+    // 动态获取本地资源
+    static getAssets(nodeRequire) {
+        return resolveAssetSource(nodeRequire).uri
+    }
+
+    // 判断是否有缓存
+    static isCached(url) {
+        if (Platform.OS == 'android') {
+            return _Module.isCached(url)
+        } else {
+            return Promise.resolve(true)
+        }
+    }
+
+    // 预加载
+    static advanceDownload(urls) {
+        _Module.advanceDownload(urls)
+    }
 }
